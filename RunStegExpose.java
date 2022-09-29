@@ -2,9 +2,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-
-
-
+import java.util.Arrays;
 
 
 /**
@@ -103,7 +101,11 @@ public class RunStegExpose {
 		}
 
 		//iterating through all files in a given directory
-		for (File file : listOfFiles) {
+		Arrays.stream(listOfFiles).parallel().forEach(file->
+		{
+
+//		});
+//		for (File file : listOfFiles) {
 		    //reset all detectors
 			ps = null;
 			cs = null;
@@ -134,8 +136,10 @@ public class RunStegExpose {
 					
 					//looking for fast break
 					if(isClean())
-						continue;
-					
+					{
+						System.out.println("Clean Image");
+						return;
+					}
 					
 					//computing Sample Pairs average
 					try{
@@ -148,7 +152,10 @@ public class RunStegExpose {
 					
 					//looking for fast break
 					if(isClean())
-						continue;
+					{
+						System.out.println("Clean Image");
+						return;
+					}
 					
 					//computing chi square attack
 					try{
@@ -168,7 +175,10 @@ public class RunStegExpose {
 					
 					//looking for fast break
 					if(isClean())
-						continue;
+					{
+						System.out.println("Clean Image");
+						return;
+					}
 					
 					//computing RS Analysis average
 					try{
@@ -186,7 +196,7 @@ public class RunStegExpose {
 					printResults();
 				}
 	        }
-		}
+		});
 		if(csvMode)
 			writer.close();
 	}
