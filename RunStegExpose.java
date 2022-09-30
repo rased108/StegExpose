@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 public class RunStegExpose {
 	
-	//size of chi square blocks 
+	//size of chi square blocks
 	private static int csSize = 1024;
 	//threshold to be applied to stegexpose indicator
 	private static double threshold = 0.2;
@@ -30,23 +30,23 @@ public class RunStegExpose {
 	private static int GREEN =1;
 	private static int BLUE =2;
 	//current file being processed
-	private static String fileName;
-	
-	
+	//private static String fileName;
+
+
 	//prepare csv file file
 	private static PrintWriter writer;
-	
+
 	//list of individual detectors to feed into fusion algorithm
-	private static ArrayList<Double> stegExposeInput;
-	private static double fileSize;
-	
+	//private static ArrayList<Double> stegExposeInput;
+	//private static double fileSize;
+
 	//initialising all detectors
-	private static Double ps = null;
-	private static Double cs=null;
-	private static Double sp = null;
-	private static Double rs = null;
-	private static Double fusion=null;
-	private static Long fusionQ=null;
+	//private static Double ps = null;
+	//private static Double cs=null;
+	//private static Double sp = null;
+	//private static Double rs = null;
+	//private static Double fusion=null;
+	//private static Long fusionQ=null;
 	
 	
 	/**
@@ -103,9 +103,15 @@ public class RunStegExpose {
 		//iterating through all files in a given directory
 		Arrays.stream(listOfFiles).parallel().forEach(file->
 		{
+			String fileName;
+			double fileSize;
+			Double ps = null;
+			Double cs=null;
+			Double sp = null;
+			Double rs = null;
+			Double fusion=null;
+			Long fusionQ=null;
 
-//		});
-//		for (File file : listOfFiles) {
 		    //reset all detectors
 			ps = null;
 			cs = null;
@@ -120,22 +126,22 @@ public class RunStegExpose {
 		        if(image != null){
 		        	fileSize = file.length();
 		        	fileName=file.getName();
-		        	
-					stegExposeInput = new ArrayList<Double>();
+
+					ArrayList<Double> stegExposeInput = new ArrayList<Double>();
 		        	
 		        	//computing primary set
 					try{
 						PrimarySets pso = new PrimarySets(image);
 						pso.run();
 						ps = steralize(pso.getResult());
-						add(ps);
+						add(ps, stegExposeInput);
 					}
 					catch(Exception e){
 					}
 					
 					
 					//looking for fast break
-					if(isClean())
+					if(isClean(fileName, stegExposeInput, fileSize, ps, cs, sp, rs, fusion, fusionQ))
 					{
 						System.out.println("Clean Image");
 						return;
@@ -145,13 +151,13 @@ public class RunStegExpose {
 					try{
 						SamplePairs spo = new SamplePairs();
 						sp = steralize((spo.doAnalysis(image, RED) + spo.doAnalysis(image, GREEN) + spo.doAnalysis(image, BLUE))/3);
-						add(sp);
+						add(sp, stegExposeInput);
 					}
 					catch(Exception e){
 					}
 					
 					//looking for fast break
-					if(isClean())
+					if(isClean(fileName, stegExposeInput, fileSize, ps, cs, sp, rs, fusion, fusionQ))
 					{
 						System.out.println("Clean Image");
 						return;
@@ -167,14 +173,14 @@ public class RunStegExpose {
 						for(double csVal : chi)
 							csQuant += csVal;
 						cs = steralize(csQuant/chi.length);
-						add(cs);
+						add(cs, stegExposeInput);
 					}
 					catch(Exception e){
 						
 					}
 					
 					//looking for fast break
-					if(isClean())
+					if(isClean(fileName, stegExposeInput, fileSize, ps, cs, sp, rs, fusion, fusionQ))
 					{
 						System.out.println("Clean Image");
 						return;
@@ -189,11 +195,11 @@ public class RunStegExpose {
 						double rsAverageNonOverlappingVal = (rso.doAnalysis(image, RED, false)[26] + rso.doAnalysis(image, GREEN, false)[26] + rso.doAnalysis(image, BLUE, false)[26])/3;
 						
 						rs = steralize((rsAverageOverlappingVal+rsAverageNonOverlappingVal)/2);
-						add(rs);
+						add(rs, stegExposeInput);
 					}
 					catch(Exception e){
 					}
-					printResults();
+					printResults(fileName, stegExposeInput, fileSize, ps, cs, sp, rs, fusion, fusionQ);
 				}
 	        }
 		});
@@ -217,7 +223,8 @@ public class RunStegExpose {
 	/**
 	 * Print out results of the steganalysis according to whether csv mode is turned on or off
 	 */
-	private static void printResults(){
+	private static void printResults(String fileName, ArrayList<Double> stegExposeInput, double fileSize,
+									 Double ps, Double cs, Double sp, Double rs, Double fusion, Long fusionQ){
 		//setting up stegexpose and quantitative stegexpose detector
 		fusion = Fuse.se(stegExposeInput);
 		fusionQ = Math.round(Fuse.seQ(fusion, fileSize));
@@ -244,7 +251,7 @@ public class RunStegExpose {
 	 * 
 	 * @param  x	value to be added
 	 */
-	private static void add(Double x){
+	private static void add(Double x, ArrayList<Double> stegExposeInput){
 		if(x.isNaN()==false){
 			stegExposeInput.add(x);
 		}
@@ -256,10 +263,11 @@ public class RunStegExpose {
 	 * 
 	 * @return true if file is regarded as clean
 	 */
-	private static boolean isClean(){
+	private static boolean isClean(String fileName, ArrayList<Double> stegExposeInput,
+								   double fileSize, Double ps, Double cs, Double sp, Double rs, Double fusion, Long fusionQ){
 		if(fast){
 			if(Fuse.se(stegExposeInput)<threshold){
-				printResults();
+				printResults(fileName, stegExposeInput, fileSize, ps, cs, sp, rs, fusion, fusionQ);
 				return true;
 			}
 		}
