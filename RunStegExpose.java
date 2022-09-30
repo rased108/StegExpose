@@ -55,7 +55,10 @@ public class RunStegExpose {
 	 * @param args	Stegexpoe arguments in the following format [directory] [speed (optional)] [threshold (optional)] [csv file (optional)]
 	 */
 	public static void main(String[] args){
-		
+		//System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "200");
+//		String val = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
+//		System.out.println("DP: " + val);
+
 		//obtaining all files to be steganalysed
 		File[] listOfFiles;
 		if(args.length>0){
