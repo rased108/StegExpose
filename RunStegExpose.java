@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -103,6 +104,9 @@ public class RunStegExpose {
 			
 		}
 
+		int total = listOfFiles.length;
+		AtomicInteger current = new AtomicInteger();
+
 		//iterating through all files in a given directory
 		Arrays.stream(listOfFiles).parallel().forEach(file->
 		{
@@ -124,7 +128,7 @@ public class RunStegExpose {
 			fusionQ = null;
 			if (file.isFile()) {
 		    	BufferedImage image = ImageFileManager.loadImage(file);
-		    	
+
 		    	//routine (currently only for images)
 		        if(image != null){
 		        	fileSize = file.length();
@@ -205,6 +209,8 @@ public class RunStegExpose {
 					printResults(fileName, stegExposeInput, fileSize, ps, cs, sp, rs, fusion, fusionQ);
 				}
 	        }
+			current.incrementAndGet();
+			System.out.print("\r Progress: " + current + " of " + total);
 		});
 		if(csvMode)
 			writer.close();
